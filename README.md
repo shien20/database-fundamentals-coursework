@@ -50,7 +50,7 @@ Key features of the database include:
 
 ## 💡 Example Business Queries
 
-The `business_queries.sql` file includes commented queries such as:
+The `query.txt` file includes commented queries such as:
 
 1. **Tesla Promotion** – Retrieve customers eligible for a limited-edition umbrella gift.
 2. **Luxury German Cars by Branch** – Evaluate sales of luxury German cars by non-managerial staff.
