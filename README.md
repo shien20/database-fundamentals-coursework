@@ -42,11 +42,9 @@ Key features of the database include:
 | File / Folder             | Description |
 |---------------------------|-------------|
 | `erd.png`                 | Entity Relationship Diagram of the GreenMotors database |
-| `schema.sql`              | SQL script to create tables and constraints |
-| `sample_data.sql`         | (Optional) Sample data for testing queries |
-| `business_queries.sql`    | Collection of real-world business queries with comments |
-| `screenshots/`            | (Optional) Screenshots of query outputs |
-| `outputs/`                | (Optional) CSV or text files showing query results |
+| `script.txt`              | SQL script to create tables and constraints |
+| `query.txt`               | Collection of real-world business queries with comments |
+| `screenshots/`            | Screenshots of query outputs |
 
 ---
 
