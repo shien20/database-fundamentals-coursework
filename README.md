@@ -76,7 +76,7 @@ You can find screenshots of selected query results in the [`/screenshots`](scree
 Below are some embedded examples:
 
 ### Tesla Promotion Query Result  
-![Tesla Promotion Query Result](screenshots/tesla-promotion-result.png)
+![Tesla Promotion Query Result](screenshots/tesla-promotion.png)
 
 ---
 
