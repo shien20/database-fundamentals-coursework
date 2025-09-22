@@ -1,0 +1,493 @@
+ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY';
+
+DROP TABLE Sale CASCADE CONSTRAINTS;
+DROP TABLE ServiceMaintenance CASCADE CONSTRAINTS;
+DROP TABLE ChargingStation CASCADE CONSTRAINTS;
+DROP TABLE Stock CASCADE CONSTRAINTS;
+DROP TABLE Car CASCADE CONSTRAINTS;
+DROP TABLE Supplier;
+DROP TABLE Customer;
+DROP TABLE Employee CASCADE CONSTRAINTS;
+DROP TABLE Department;
+DROP TABLE DealerBranch CASCADE CONSTRAINTS;
+DROP TABLE Job;
+
+-- Create Car table
+CREATE TABLE Car (
+    CarID VARCHAR2 (10) PRIMARY KEY,
+    Brand VARCHAR2 (50) NOT NULL,
+    CarModel VARCHAR2(50) NOT NULL,
+    ManufactureDate DATE NOT NULL,
+    BatteryCapacity NUMBER NOT NULL CHECK (BatteryCapacity > 0),
+    Range NUMBER(8) NOT NULL CHECK (Range > 0),
+    Price NUMBER(12,2) NOT NULL CHECK (Price > 0),
+    CurrentStatus VARCHAR2(20)
+);
+
+-- Create Supplier table
+CREATE TABLE Supplier (
+    SupplierID VARCHAR2 (10) PRIMARY KEY,
+    CompanyName VARCHAR2(100) NOT NULL,
+    ContactNo VARCHAR2(50) NOT NULL
+);
+
+-- Create Customer table
+CREATE TABLE Customer (
+    CustomerID VARCHAR2 (10) PRIMARY KEY,
+    FirstName VARCHAR2(50) NOT NULL,
+    LastName VARCHAR2(50) NOT NULL,
+    Age NUMBER(2) NOT NULL CHECK (Age >= 18),
+    Email VARCHAR2(100) NOT NULL,
+    PhoneNumber VARCHAR(13),
+    Address VARCHAR2(200)
+);
+
+-- Create Department table
+CREATE TABLE Department (
+    DepartmentID VARCHAR2 (10) PRIMARY KEY,
+    Name VARCHAR2(100) NOT NULL
+);    
+
+--Create Job table
+CREATE TABLE Job (
+    JobID VARCHAR2 (10) PRIMARY KEY,
+    JobPosition VARCHAR2 (50) NOT NULL
+);
+
+-- Create Employee table
+CREATE TABLE Employee (
+    EmployeeID VARCHAR2 (10) PRIMARY KEY,
+    EmployeeFirstName VARCHAR2 (50) NOT NULL,
+    EmployeeLastName VARCHAR2 (50) NOT NULL,
+    EmployeeDOB DATE NOT NULL,
+    EmployeeContactNo VARCHAR(13) NOT NULL,
+    DepartmentID VARCHAR2 (10) NOT NULL,
+    BranchID VARCHAR2 (10) NOT NULL,
+    EmployeeManagerID VARCHAR2 (10),
+    JobID VARCHAR2(10) NOT NULL,
+    Salary NUMBER(10) CHECK (Salary >= 1500),
+    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID),
+    FOREIGN KEY (EmployeeManagerID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY (JobID) REFERENCES Job(JobID)
+);
+
+-- Create DealerBranch table
+CREATE TABLE DealerBranch (
+    BranchID VARCHAR2 (10) PRIMARY KEY,
+    Location VARCHAR2(100) NOT NULL,
+    Contact VARCHAR2(50),
+    BranchManagerID VARCHAR2 (10) NOT NULL,
+    FOREIGN KEY (BranchManagerID) REFERENCES Employee(EmployeeID)
+);
+
+-- Create Stock table
+CREATE TABLE Stock (
+    StockID VARCHAR2 (10) PRIMARY KEY,
+    CarID VARCHAR2(10) NOT NULL,
+    BranchID VARCHAR2 (10) NOT NULL,
+    Quantity NUMBER(4) NOT NULL,
+    SupplierID VARCHAR(10) NOT NULL,
+    FOREIGN KEY (CarID) REFERENCES Car(CarID),
+    FOREIGN KEY (BranchID) REFERENCES DealerBranch(BranchID),
+    FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID)
+);
+
+-- Create ChargingStation table
+CREATE TABLE ChargingStation (
+    ChargingStationID VARCHAR2 (10) PRIMARY KEY,
+    BranchID VARCHAR2 (10) NOT NULL,
+    NumberOfChargers NUMBER(1) NOT NULL CHECK (NumberOfChargers BETWEEN 1 AND 3),
+    ChargingSpeedInkW NUMBER(4),
+    FOREIGN KEY (BranchID) REFERENCES DealerBranch(BranchID),
+    UNIQUE (BranchID)
+);
+
+
+
+-- Create Sale table
+CREATE TABLE Sale (
+    SaleID NUMBER(8) PRIMARY KEY,
+    CarID VARCHAR(10) NOT NULL,
+    CustomerID VARCHAR2 (10) NOT NULL,
+    EmployeeID VARCHAR2 (10) NOT NULL,
+    Quantity NUMBER(4) NOT NULL,
+    DatePurchased DATE NOT NULL,
+    TimePurchased VARCHAR2 (5) NOT NULL,
+    SaleAmount NUMBER(12,2) NOT NULL CHECK (SaleAmount > 0),
+    FOREIGN KEY (CarID) REFERENCES Car(CarID),
+    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
+    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+);
+
+-- Create ServiceMaintenance table
+CREATE TABLE ServiceMaintenance (
+    ServiceID VARCHAR2(10) NOT NULL,
+    CustomerID VARCHAR2(10) NOT NULL,
+    EmployeeID VARCHAR2(10) NOT NULL,
+    CarID VARCHAR(10) NOT NULL,
+    ServiceStart DATE, 
+    ServiceEnd DATE,
+    ServiceDescription VARCHAR2(200),
+    ServiceCost NUMBER(12,2) NOT NULL CHECK (ServiceCost > 0),
+    ServiceStatus VARCHAR2(20) CHECK (ServiceStatus = 'In Progress' OR ServiceStatus = 'Completed'),
+    PRIMARY KEY (ServiceID, EmployeeID),
+    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
+    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY (CarID) REFERENCES Car(CarID)
+);
+
+
+
+-- Create indexes
+CREATE INDEX idx_job_id ON Employee(JobID); 
+--Faster retrieval of employee by job position.
+CREATE INDEX idx_employee_id ON Sale(EmployeeID);
+ --Allows employees to efficiently query sales records.
+CREATE INDEX idx_branch_id ON Stock(BranchID); 
+--Ensure efficient access to stock records per branch, allowing for inventory control and branch-level stock analysis.
+CREATE INDEX idx_car_id ON ServiceMaintenance(CarID); 
+--Tracking maintenance history, planning upcoming maintenance, and guaranteeing thorough service records for each car.
+CREATE INDEX idx_number_of_chargers ON ChargingStation(NumberOfChargers); 
+-- Faster retrieval of the number of chargers per charging station. 
+
+
+INSERT INTO Car VALUES ('C01', 'Tesla', 'Model S', TO_DATE('15-01-2024', 'DD-MM-YYYY'), 100, 650, 131000, 'Available');
+INSERT INTO Car VALUES ('C02', 'Tesla', 'Model 3', TO_DATE('20-05-2020', 'DD-MM-YYYY'), 75, 580, 150000, 'Available');
+INSERT INTO Car VALUES ('C03', 'Tesla', 'Model Y', TO_DATE('22-08-2022', 'DD-MM-YYYY'), 82, 540, 230000, 'Available');
+INSERT INTO Car VALUES ('C04', 'Porsche', 'Taycan', TO_DATE('22-03-2022', 'DD-MM-YYYY'), 93, 464, 1100000, 'Available');
+INSERT INTO Car VALUES ('C05', 'Porsche', 'Macan Electric', TO_DATE('24-05-2024', 'DD-MM-YYYY'), 80, 330, 2100000, 'Available');
+INSERT INTO Car VALUES ('C06', 'Nissan', 'Leaf', TO_DATE('20-05-2020', 'DD-MM-YYYY'), 62, 385, 150000, 'Available');
+INSERT INTO Car VALUES ('C07', 'Nissan', 'Ariya', TO_DATE('22-07-2021', 'DD-MM-YYYY'), 87, 480, 250000, 'Available');
+INSERT INTO Car VALUES ('C08', 'Hyundai', 'Kona Electric', TO_DATE('28-02-2022', 'DD-MM-YYYY'), 64, 482, 380000, 'Available');
+INSERT INTO Car VALUES ('C09', 'Hyundai', 'Ioniq 5', TO_DATE('22-07-2021', 'DD-MM-YYYY'), 77.4, 481, 320000, 'Available');
+INSERT INTO Car VALUES ('C10', 'Mercedes-Benz', 'EQA', TO_DATE('22-01-2024', 'DD-MM-YYYY'), 80, 414, 850000, 'Available');
+INSERT INTO Car VALUES ('C11', 'Mercedes-Benz', 'EQB', TO_DATE('25-07-2021', 'DD-MM-YYYY'), 66.5, 426, 1200000, 'Available');
+INSERT INTO Car VALUES ('C12', 'BMW', 'i3', TO_DATE('12-01-2024', 'DD-MM-YYYY'), 42, 330, 202500, 'Available');
+INSERT INTO Car VALUES ('C13', 'BMW', 'i4', TO_DATE('05-03-2021', 'DD-MM-YYYY'), 83.9, 590, 324000, 'Available');
+INSERT INTO Car VALUES ('C14', 'Audi', 'e-tron', TO_DATE('15-09-2021', 'DD-MM-YYYY'), 95, 436, 414000, 'Available');
+INSERT INTO Car VALUES ('C15', 'Audi', 'e-tron GT', TO_DATE('22-03-2022', 'DD-MM-YYYY'), 93, 464, 495000, 'Not Available');
+INSERT INTO Car VALUES ('C16', 'BYD', 'Tang EV', TO_DATE('11-01-2022', 'DD-MM-YYYY'), 86, 520, 270000, 'Available');
+INSERT INTO Car VALUES ('C17', 'BYD', 'Han EV', TO_DATE('19-05-2021', 'DD-MM-YYYY'), 85, 605, 297000, 'Not Available');
+INSERT INTO Car VALUES ('C18', 'Lexus', 'RZ 450e', TO_DATE('25-01-2022', 'DD-MM-YYYY'), 71.4, 400, 270000, 'Available');
+INSERT INTO Car VALUES ('C19', 'Lexus', 'UX 300e', TO_DATE('20-07-2021', 'DD-MM-YYYY'), 54.3, 305, 247500, 'Available');
+INSERT INTO Car VALUES ('C20', 'Volkswagen', 'ID.4', TO_DATE('15-03-2022', 'DD-MM-YYYY'), 77, 520, 45000, 'Available');
+INSERT INTO Car VALUES ('C21', 'Volkswagen', 'ID.6', TO_DATE('10-12-2022', 'DD-MM-YYYY'), 82, 570, 247500, 'Available');
+INSERT INTO Car VALUES ('C22', 'Mini', 'Cooper SE', TO_DATE('15-11-2020', 'DD-MM-YYYY'), 32.6, 233, 189000, 'Available');
+INSERT INTO Car VALUES ('C23', 'Mini', 'Countryman PHEV', TO_DATE('05-03-2024', 'DD-MM-YYYY'), 9.6, 55, 235000, 'Available');
+INSERT INTO Car VALUES ('C24', 'Mazda', 'MX-30', TO_DATE('20-02-2022', 'DD-MM-YYYY'), 35.5, 200, 150000, 'Available');
+INSERT INTO Car VALUES ('C25', 'Mazda', 'CX-30 EV', TO_DATE('12-12-2022', 'DD-MM-YYYY'), 50, 300, 180000, 'Available');
+INSERT INTO Car VALUES ('C26', 'Volvo', 'XC40 Recharge', TO_DATE('30-06-2021', 'DD-MM-YYYY'), 78, 418, 240000, 'Available');
+INSERT INTO Car VALUES ('C27', 'Volvo', 'C40 Recharge', TO_DATE('22-08-2022', 'DD-MM-YYYY'), 78, 420, 250000, 'Available');
+INSERT INTO Car VALUES ('C28', 'Kia', 'Soul EV', TO_DATE('18-05-2021', 'DD-MM-YYYY'), 64, 452, 175000, 'Available');
+INSERT INTO Car VALUES ('C29', 'Kia', 'Niro EV', TO_DATE('27-07-2021', 'DD-MM-YYYY'), 64, 455, 185000, 'Available');
+INSERT INTO Car VALUES ('C30', 'Renault', 'Zoe', TO_DATE('25-11-2020', 'DD-MM-YYYY'), 52, 395, 145000, 'Available');
+INSERT INTO Car VALUES ('C31', 'Renault', 'Kangoo Z.E.', TO_DATE('15-03-2021', 'DD-MM-YYYY'), 33, 230, 130000, 'Available');
+INSERT INTO Car VALUES ('C32', 'Honda', 'e', TO_DATE('10-12-2020', 'DD-MM-YYYY'), 35.5, 220, 160000, 'Available');
+INSERT INTO Car VALUES ('C33', 'Honda', 'Clarity PHEV', TO_DATE('20-05-2021', 'DD-MM-YYYY'), 17, 75, 200000, 'Available');
+INSERT INTO Car VALUES ('C34', 'Toyota', 'bZ4X', TO_DATE('30-06-2022', 'DD-MM-YYYY'), 71.4, 500, 270000, 'Available');
+INSERT INTO Car VALUES ('C35', 'Toyota', 'Prius Prime', TO_DATE('10-04-2021', 'DD-MM-YYYY'), 8.8, 40, 150000, 'Available');
+INSERT INTO Car VALUES ('C36', 'Peugeot', 'e-208', TO_DATE('15-09-2021', 'DD-MM-YYYY'), 50, 340, 170000, 'Available');
+INSERT INTO Car VALUES ('C37', 'Peugeot', 'e-2008', TO_DATE('10-01-2022', 'DD-MM-YYYY'), 50, 345, 180000, 'Available');
+INSERT INTO Car VALUES ('C38', 'Jaguar', 'I-PACE', TO_DATE('22-07-2021', 'DD-MM-YYYY'), 90, 470, 400000, 'Available');
+INSERT INTO Car VALUES ('C39', 'Ford', 'Mustang Mach-E', TO_DATE('12-11-2021', 'DD-MM-YYYY'), 88, 483, 292500, 'Available');
+
+INSERT INTO Department VALUES('D01', 'Finance Department');
+INSERT INTO Department VALUES('D02', 'Sales Department');
+INSERT INTO Department VALUES('D03', 'Customer Service');
+INSERT INTO Department VALUES('D04', 'Service and Maintenance');
+INSERT INTO Department VALUES('D05', 'Marketing Department');
+
+INSERT INTO Job VALUES ('J01', 'Finance Manager');
+INSERT INTO Job VALUES ('J02', 'Finance Assistant');
+INSERT INTO Job VALUES ('J03', 'Accountant');
+INSERT INTO Job VALUES ('J04', 'Sales Manager');
+INSERT INTO Job VALUES ('J05', 'Sales Associate');
+INSERT INTO Job VALUES ('J06', 'Senior Salesperson');
+INSERT INTO Job VALUES ('J07', 'Junior Salesperson');
+INSERT INTO Job VALUES ('J08', 'Customer Service Manager');
+INSERT INTO Job VALUES ('J09', 'Help Desk Technician');
+INSERT INTO Job VALUES ('J10', 'Call Center Agent');
+INSERT INTO Job VALUES ('J11', 'Service Manager');
+INSERT INTO Job VALUES ('J12', 'Service Advisor');
+INSERT INTO Job VALUES ('J13', 'Maintenance Technician');
+INSERT INTO Job VALUES ('J14', 'Car Mechanic');
+INSERT INTO Job VALUES ('J15', 'Marketing Manager');
+INSERT INTO Job VALUES ('J16', 'Junior Marketing');
+INSERT INTO Job VALUES ('J17', 'Senior Marketing');
+INSERT INTO Job VALUES ('J18', 'Marketing Coordinator');
+
+INSERT INTO Employee VALUES ('E01', 'Andrew', 'Lee', TO_DATE('15-03-1985', 'DD-MM-YYYY'), '0103456789', 'D01', 'BR001', NULL, 'J01', 7000);
+INSERT INTO Employee VALUES ('E02', 'Samantha', 'Ng', TO_DATE('22-06-1990', 'DD-MM-YYYY'), '0136521234', 'D01', 'BR001', 'E01', 'J02', 5500);
+INSERT INTO Employee VALUES ('E03', 'Christopher', 'Tan', TO_DATE('10-11-1982', 'DD-MM-YYYY'), '0149183456', 'D01', 'BR001', 'E01', 'J03', 4800);
+INSERT INTO Employee VALUES ('E04', 'Rachel', 'Chong', TO_DATE('05-08-1993', 'DD-MM-YYYY'), '0195317890', 'D02', 'BR001', NULL, 'J04', 5500);
+INSERT INTO Employee VALUES ('E05', 'Zara', 'Khan', TO_DATE('22-10-1991', 'DD-MM-YYYY'), '0163451234', 'D02', 'BR001', 'E04', 'J05', 3200);
+INSERT INTO Employee VALUES ('E06', 'Ethan', 'Nguyen', TO_DATE('17-05-1989', 'DD-MM-YYYY'), '0126524567' , 'D02', 'BR001', 'E04', 'J06', 4500);
+INSERT INTO Employee VALUES ('E07', 'Jon', 'Kim', TO_DATE('15-02-1990', 'DD-MM-YYYY'), '0125313456', 'D02', 'BR001', 'E04', 'J07', 3200);
+INSERT INTO Employee VALUES ('E08', 'Jessica', 'Yong', TO_DATE('18-02-1992', 'DD-MM-YYYY'), '0175313456', 'D03', 'BR001', NULL, 'J08', 5500);
+INSERT INTO Employee VALUES ('E09', 'Jessica', 'Yong', TO_DATE('18-02-1992', 'DD-MM-YYYY'), '0103459876' , 'D03', 'BR001', 'E08', 'J09', 4800);
+INSERT INTO Employee VALUES ('E10', 'Sam', 'Koh', TO_DATE('09-04-1986', 'DD-MM-YYYY'), '0136527890' , 'D03', 'BR001', 'E08', 'J10', 3500);
+INSERT INTO Employee VALUES ('E11', 'Sammy', 'Foo', TO_DATE('14-05-1988', 'DD-MM-YYYY'), '0149181234' , 'D04', 'BR001', NULL, 'J11', 5800);
+INSERT INTO Employee VALUES ('E12', 'Jonathan', 'Wong', TO_DATE('28-01-1991', 'DD-MM-YYYY'), '0195314567' , 'D04', 'BR001', 'E11', 'J12', 5500);
+INSERT INTO Employee VALUES ('E13', 'Sophia', 'Chan', TO_DATE('11-09-1983', 'DD-MM-YYYY'), '0163457890' , 'D04', 'BR001', 'E11', 'J13', 5000);
+INSERT INTO Employee VALUES ('E14', 'Samson', 'Ong', TO_DATE('12-05-1988', 'DD-MM-YYYY'), '0126523456' , 'D04', 'BR001', 'E11', 'J14', 4500);
+INSERT INTO Employee VALUES ('E15', 'Emily', 'Sim', TO_DATE('23-07-1991', 'DD-MM-YYYY'), '0119182345' , 'D05', 'BR001', NULL, 'J15', 7000);
+INSERT INTO Employee VALUES ('E16', 'Mark', 'Tan', TO_DATE('05-11-1980', 'DD-MM-YYYY'), '0175316789' , 'D05', 'BR001', 'E15', 'J16', 3000);
+INSERT INTO Employee VALUES ('E17', 'Jasamine', 'Low', TO_DATE('15-02-1994', 'DD-MM-YYYY'), '0103452345' , 'D05', 'BR001', 'E15', 'J17', 5000);
+INSERT INTO Employee VALUES ('E18', 'Samuel', 'Yap', TO_DATE('27-12-1986', 'DD-MM-YYYY'),'0136525678' , 'D05', 'BR001', 'E15', 'J18', 5800);
+INSERT INTO Employee VALUES ('E19', 'Olivia', 'Teoh', TO_DATE('10-01-1993', 'DD-MM-YYYY'), '0143456789', 'D01', 'BR002', NULL, 'J01', 7000);
+INSERT INTO Employee VALUES ('E20', 'William', 'Goh', TO_DATE('25-08-1990', 'DD-MM-YYYY'), '0164567890', 'D01', 'BR002', 'E19', 'J02', 5500);
+INSERT INTO Employee VALUES ('E21', 'Hannah', 'Lau', TO_DATE('14-03-1987', 'DD-MM-YYYY'), '0105678901', 'D01', 'BR002', 'E19', 'J03', 4800);
+INSERT INTO Employee VALUES ('E22', 'Lucas', 'Pang', TO_DATE('05-06-1985', 'DD-MM-YYYY'), '0116789012', 'D02', 'BR002', NULL, 'J04', 5500);
+INSERT INTO Employee VALUES ('E23', 'Megan', 'Tan', TO_DATE('18-07-1992', 'DD-MM-YYYY'), '0187890123', 'D02', 'BR002', 'E22', 'J05', 3200);
+INSERT INTO Employee VALUES ('E24', 'Ethan', 'Chia', TO_DATE('30-05-1989', 'DD-MM-YYYY'), '0138901234', 'D02', 'BR002', 'E22', 'J06', 4500);
+INSERT INTO Employee VALUES ('E25', 'Ava', 'Chong', TO_DATE('09-09-1990', 'DD-MM-YYYY'), '0199012345', 'D02', 'BR002', 'E22', 'J07', 3200);
+INSERT INTO Employee VALUES ('E26', 'Ryan', 'Lim', TO_DATE('22-12-1984', 'DD-MM-YYYY'), '0140123456', 'D03', 'BR002', NULL, 'J08', 5500);
+INSERT INTO Employee VALUES ('E27', 'Ella', 'Ooi', TO_DATE('13-01-1983', 'DD-MM-YYYY'), '0161234567', 'D03', 'BR002', 'E26', 'J09', 4800);
+INSERT INTO Employee VALUES ('E28', 'Liam', 'Lee', TO_DATE('28-03-1995', 'DD-MM-YYYY'), '0102345678', 'D03', 'BR002', 'E26', 'J10', 3500);
+INSERT INTO Employee VALUES ('E29', 'Chloe', 'Ang', TO_DATE('12-08-1989', 'DD-MM-YYYY'), '0113456789', 'D04', 'BR002', NULL, 'J11', 5800);
+INSERT INTO Employee VALUES ('E30', 'David', 'Tan', TO_DATE('07-06-1987', 'DD-MM-YYYY'), '0184567890', 'D04', 'BR002', 'E29', 'J12', 5500);
+INSERT INTO Employee VALUES ('E31', 'Mia', 'Liew', TO_DATE('22-04-1990', 'DD-MM-YYYY'), '0135678901', 'D04', 'BR002', 'E29', 'J13', 5000);
+INSERT INTO Employee VALUES ('E32', 'Noah', 'Teo', TO_DATE('01-11-1993', 'DD-MM-YYYY'), '0134566719', 'D04', 'BR002', 'E29', 'J14', 4500);
+INSERT INTO Employee VALUES ('E33', 'Isabella', 'Ng', TO_DATE('24-05-1988', 'DD-MM-YYYY'), '0117896987', 'D05', 'BR002', NULL, 'J15', 7000);
+INSERT INTO Employee VALUES ('E34', 'James', 'Lau', TO_DATE('15-12-1991', 'DD-MM-YYYY'), '0188455736', 'D05', 'BR002', 'E33', 'J16', 3000);
+INSERT INTO Employee VALUES ('E35', 'Sophie', 'Yeoh', TO_DATE('11-08-1990', 'DD-MM-YYYY'), '0110223987', 'D05', 'BR002', 'E33', 'J17', 5000);
+INSERT INTO Employee VALUES ('E36', 'Alexander', 'Choo', TO_DATE('07-10-1986', 'DD-MM-YYYY'), '0119876321', 'D05', 'BR002', 'E33', 'J18', 5800);
+INSERT INTO Employee VALUES ('E37', 'Charlotte', 'Lim', TO_DATE('21-01-1992', 'DD-MM-YYYY'), '0130976543', 'D01', 'BR003', NULL, 'J01', 7000);
+INSERT INTO Employee VALUES ('E38', 'Gabriel', 'Tan', TO_DATE('05-04-1990', 'DD-MM-YYYY'), '0121487653', 'D01', 'BR003', 'E37', 'J02', 5500);
+INSERT INTO Employee VALUES ('E39', 'Grace', 'Sim', TO_DATE('10-09-1989', 'DD-MM-YYYY'), '0132198765', 'D01', 'BR003', 'E37', 'J03', 4800);
+INSERT INTO Employee VALUES ('E40', 'Oliver', 'Lee', TO_DATE('13-12-1994', 'DD-MM-YYYY'), '0143209876', 'D02', 'BR003', NULL, 'J04', 5500);
+INSERT INTO Employee VALUES ('E41', 'Natalie', 'Chan', TO_DATE('07-11-1993', 'DD-MM-YYYY'), '0154321098', 'D02', 'BR003', 'E40', 'J05', 3200);
+INSERT INTO Employee VALUES ('E42', 'Amina', 'Bashir', TO_DATE('28-07-1991', 'DD-MM-YYYY'), '0164566792', 'D02', 'BR003', 'E40', 'J06', 4500);
+INSERT INTO Employee VALUES ('E43', 'John', 'Doe', TO_DATE('15-03-1985', 'DD-MM-YYYY'), '0164566793', 'D02', 'BR003', 'E40', 'J07', 3200);
+INSERT INTO Employee VALUES ('E44', 'Jane', 'Smith', TO_DATE('22-11-1990', 'DD-MM-YYYY'), '0164566794', 'D03', 'BR003', NULL, 'J08', 5500);
+INSERT INTO Employee VALUES ('E45', 'Robert', 'Brown', TO_DATE('05-05-1982', 'DD-MM-YYYY'), '0164566795', 'D03', 'BR003', 'E44', 'J09', 4800);
+INSERT INTO Employee VALUES ('E46', 'Emily', 'Jones', TO_DATE('30-01-1995', 'DD-MM-YYYY'), '0164566796', 'D03', 'BR003', 'E44', 'J10', 3500);
+INSERT INTO Employee VALUES ('E47', 'Michael', 'Garcia', TO_DATE('18-09-1988', 'DD-MM-YYYY'), '0164566797', 'D04', 'BR003', NULL, 'J11', 5800);
+INSERT INTO Employee VALUES ('E48', 'Linda', 'Martinez', TO_DATE('07-12-1992', 'DD-MM-YYYY'), '0164566798', 'D04', 'BR003', 'E47', 'J12', 5500);
+INSERT INTO Employee VALUES ('E49', 'David', 'Lopez', TO_DATE('13-07-1987', 'DD-MM-YYYY'), '0164566799', 'D04', 'BR003', 'E47', 'J13', 5000);
+INSERT INTO Employee VALUES ('E50', 'Susan', 'Gonzalez', TO_DATE('21-04-1994', 'DD-MM-YYYY'), '0164566800', 'D04', 'BR003', 'E47', 'J14', 4500);
+INSERT INTO Employee VALUES ('E51', 'Charles', 'Wilson', TO_DATE('11-06-1983', 'DD-MM-YYYY'), '0164566801', 'D05', 'BR003', NULL, 'J15', 7000);
+INSERT INTO Employee VALUES ('E52', 'Karen', 'Clark', TO_DATE('20-10-1991', 'DD-MM-YYYY'), '0164566802', 'D05', 'BR003', 'E51', 'J16', 3000);
+INSERT INTO Employee VALUES ('E53', 'Patricia', 'Rodriguez', TO_DATE('29-02-1984', 'DD-MM-YYYY'), '0164566803', 'D05', 'BR003', 'E51', 'J17', 5000);
+INSERT INTO Employee VALUES ('E54', 'Christopher', 'Lewis', TO_DATE('17-08-1990', 'DD-MM-YYYY'), '0164566804', 'D05', 'BR003', 'E51', 'J18', 5800);
+INSERT INTO Employee VALUES ('E55', 'Barbara', 'Lee', TO_DATE('02-11-1985', 'DD-MM-YYYY'), '0164566805', 'D01', 'BR004', NULL, 'J01', 7000);
+INSERT INTO Employee VALUES ('E56', 'Daniel', 'Walker', TO_DATE('27-05-1987', 'DD-MM-YYYY'), '0164566806', 'D01', 'BR004', 'E55', 'J02', 5500);
+INSERT INTO Employee VALUES ('E57', 'Paul', 'Hall', TO_DATE('09-03-1989', 'DD-MM-YYYY'), '0164566807', 'D01', 'BR004', 'E55', 'J03', 4800);
+INSERT INTO Employee VALUES ('E58', 'Nancy', 'Allen', TO_DATE('16-07-1986', 'DD-MM-YYYY'), '0164566808', 'D02', 'BR004', NULL, 'J04', 6500);
+INSERT INTO Employee VALUES ('E59', 'Steven', 'Young', TO_DATE('11-12-1991', 'DD-MM-YYYY'), '0164566809', 'D02', 'BR004', 'E58', 'J05', 3200);
+INSERT INTO Employee VALUES ('E60', 'Sarah', 'King', TO_DATE('19-04-1984', 'DD-MM-YYYY'), '0164566810', 'D02', 'BR004', 'E58', 'J06', 4500);
+INSERT INTO Employee VALUES ('E61', 'Kevin', 'Wright', TO_DATE('08-10-1982', 'DD-MM-YYYY'), '0164566811', 'D02', 'BR004', 'E58', 'J07', 3200);
+INSERT INTO Employee VALUES ('E62', 'Betty', 'Scott', TO_DATE('25-01-1985', 'DD-MM-YYYY'), '0164566812', 'D03', 'BR004', NULL, 'J08', 5500);
+INSERT INTO Employee VALUES ('E63', 'Brian', 'Torres', TO_DATE('30-11-1987', 'DD-MM-YYYY'), '0164566813', 'D03', 'BR004', 'E62', 'J09', 4800);
+INSERT INTO Employee VALUES ('E64', 'Megan', 'Green', TO_DATE('14-09-1990', 'DD-MM-YYYY'), '0164566814', 'D03', 'BR004', 'E62', 'J10', 3500);
+INSERT INTO Employee VALUES ('E65', 'Mark', 'Baker', TO_DATE('05-05-1983', 'DD-MM-YYYY'), '0164566815', 'D04', 'BR004', NULL, 'J11', 5800);
+INSERT INTO Employee VALUES ('E66', 'Sandra', 'Harris', TO_DATE('13-07-1986', 'DD-MM-YYYY'), '0164566816', 'D04', 'BR004', 'E65', 'J12', 5500);
+INSERT INTO Employee VALUES ('E67', 'Jason', 'Gonzales', TO_DATE('24-08-1988', 'DD-MM-YYYY'), '0164566817', 'D04', 'BR004', 'E65', 'J13', 5000);
+INSERT INTO Employee VALUES ('E68', 'Donna', 'Nelson', TO_DATE('16-12-1992', 'DD-MM-YYYY'), '0164566818', 'D04', 'BR004', 'E65', 'J14', 4500);
+INSERT INTO Employee VALUES ('E69', 'Edward', 'Carter', TO_DATE('02-10-1984', 'DD-MM-YYYY'), '0164566819', 'D05', 'BR004', NULL, 'J15', 7000);
+INSERT INTO Employee VALUES ('E70', 'Michelle', 'Mitchell', TO_DATE('29-01-1989', 'DD-MM-YYYY'), '0164566820', 'D05', 'BR004', 'E69', 'J16', 3000);
+INSERT INTO Employee VALUES ('E71', 'George', 'Perez', TO_DATE('22-02-1991', 'DD-MM-YYYY'), '0164566821', 'D05', 'BR004', 'E69', 'J17', 5000);
+INSERT INTO Employee VALUES ('E72', 'Lisa', 'Roberts', TO_DATE('10-04-1987', 'DD-MM-YYYY'), '0164566822', 'D05', 'BR004', 'E69', 'J18', 5800);
+INSERT INTO Employee VALUES ('E73', 'Frank', 'Turner', TO_DATE('08-05-1983', 'DD-MM-YYYY'), '0164566823', 'D01', 'BR005', NULL, 'J01', 7000);
+INSERT INTO Employee VALUES ('E74', 'Dorothy', 'Phillips', TO_DATE('04-06-1985', 'DD-MM-YYYY'), '0164566824', 'D01', 'BR005', 'E73', 'J02', 5500);
+INSERT INTO Employee VALUES ('E75', 'Gary', 'Campbell', TO_DATE('19-07-1990', 'DD-MM-YYYY'), '0164566825', 'D01', 'BR005', 'E73', 'J03', 4800);
+INSERT INTO Employee VALUES ('E76', 'Linda', 'Parker', TO_DATE('07-08-1982', 'DD-MM-YYYY'), '0164566826', 'D02', 'BR005', NULL, 'J04', 6500);
+INSERT INTO Employee VALUES ('E77', 'Thomas', 'Evans', TO_DATE('11-09-1992', 'DD-MM-YYYY'), '0164566827', 'D02', 'BR005', 'E76', 'J05', 3200);
+INSERT INTO Employee VALUES ('E78', 'Betty', 'Edwards', TO_DATE('28-10-1984', 'DD-MM-YYYY'), '0164566828', 'D02', 'BR005', 'E76', 'J06', 4500);
+INSERT INTO Employee VALUES ('E79', 'Kevin', 'Collins', TO_DATE('13-11-1986', 'DD-MM-YYYY'), '0164566829', 'D02', 'BR005', 'E76', 'J07', 3200);
+INSERT INTO Employee VALUES ('E80', 'Helen', 'Stewart', TO_DATE('02-12-1990', 'DD-MM-YYYY'), '0164566830', 'D03', 'BR005', NULL, 'J08', 5500);
+INSERT INTO Employee VALUES ('E81', 'Carol', 'Sanchez', TO_DATE('24-01-1988', 'DD-MM-YYYY'), '0164566831', 'D03', 'BR005', 'E80', 'J09', 4800);
+INSERT INTO Employee VALUES ('E82', 'Kenneth', 'Morris', TO_DATE('14-03-1985', 'DD-MM-YYYY'), '0164566832', 'D03', 'BR005', 'E80', 'J10', 3500);
+INSERT INTO Employee VALUES ('E83', 'Margaret', 'Rogers', TO_DATE('20-05-1992', 'DD-MM-YYYY'), '0164566833', 'D04', 'BR005', NULL, 'J11', 5800);
+INSERT INTO Employee VALUES ('E84', 'Edward', 'Reed', TO_DATE('28-06-1984', 'DD-MM-YYYY'), '0164566834', 'D04', 'BR005', 'E83', 'J12', 5500);
+INSERT INTO Employee VALUES ('E85', 'Angela', 'Cook', TO_DATE('13-07-1987', 'DD-MM-YYYY'), '0164566835', 'D04', 'BR005', 'E83', 'J13', 5000);
+INSERT INTO Employee VALUES ('E86', 'Helen', 'Morgan', TO_DATE('07-09-1989', 'DD-MM-YYYY'), '0164566836', 'D04', 'BR005', 'E83', 'J14', 4500);
+INSERT INTO Employee VALUES ('E87', 'Eric', 'Bell', TO_DATE('22-11-1982', 'DD-MM-YYYY'), '0164566837', 'D05', 'BR005', NULL, 'J15', 7000);
+INSERT INTO Employee VALUES ('E88', 'Rebecca', 'Murphy', TO_DATE('05-12-1991', 'DD-MM-YYYY'), '0164566838', 'D05', 'BR005', 'E87', 'J16', 3000);
+INSERT INTO Employee VALUES ('E89', 'Anthony', 'Bailey', TO_DATE('16-01-1983', 'DD-MM-YYYY'), '0164566839', 'D05', 'BR005', 'E87', 'J17', 5000);
+INSERT INTO Employee VALUES ('E90', 'Melissa', 'Rivera', TO_DATE('22-02-1985', 'DD-MM-YYYY'), '0164566840', 'D05', 'BR005', 'E87', 'J18', 5800);
+
+INSERT INTO DealerBranch VALUES('BR001', '130, Jalan Bunga Raya, 43200 Cheras, Selangor, Malaysia', '03-1234567', 'E01');
+INSERT INTO DealerBranch VALUES('BR002', '426, Jalan Puteri, 43000 Kajang, Selangor, Malaysia', '03-2332678', 'E07');
+INSERT INTO DealerBranch VALUES('BR003', '749, Jalan Setia, 43300 Balakong, Selangor, Malaysia', '03-4756789', 'E41');
+INSERT INTO DealerBranch VALUES('BR004', '101, Jalan Tropicana, 47410 Petaling Jaya, Selangor, Malaysia', '03-8467890', 'E59');
+INSERT INTO DealerBranch VALUES('BR005', '203, Jalan Kenanga, 47100 Puchong, Selangor, Malaysia', '03-5278901', 'E76');
+
+INSERT INTO ChargingStation VALUES  ('CS01', 'BR001', 2, 50);
+INSERT INTO ChargingStation VALUES  ('CS02', 'BR002', 3, 75);
+INSERT INTO ChargingStation VALUES  ('CS03', 'BR003', 1, 45);
+INSERT INTO ChargingStation VALUES  ('CS04', 'BR004', 3, 60);
+INSERT INTO ChargingStation VALUES  ('CS05', 'BR005', 2, 80);
+
+INSERT INTO Supplier VALUES ('SP01', 'Tesla', '03-1234-5678');
+INSERT INTO Supplier VALUES ('SP02', 'BYD', '03-5569-2260');
+INSERT INTO Supplier VALUES ('SP03', 'Ford', '03-80236640');
+INSERT INTO Supplier VALUES ('SP04', 'Porsche', '03-7623-9911');
+INSERT INTO Supplier VALUES ('SP05', 'BMW', '03-3456-7890');
+INSERT INTO Supplier VALUES ('SP06', 'Nissan', '03-2345-6789');
+INSERT INTO Supplier VALUES ('SP07', 'Audi', '03-7890-1234');
+INSERT INTO Supplier VALUES ('SP08', 'Hyundai', '03-4567-8901');
+INSERT INTO Supplier VALUES ('SP09', 'Mini', '03-0123-4567');
+INSERT INTO Supplier VALUES ('SP10', 'Mercedes-Benz', '03-5678-9012');
+INSERT INTO Supplier VALUES ('SP11', 'Mazda', '03-6677-8899');
+INSERT INTO Supplier VALUES ('SP12', 'Volvo', '03-2233-4455');
+INSERT INTO Supplier VALUES ('SP13', 'Kia', '03-6789-0123');
+INSERT INTO Supplier VALUES ('SP14', 'Renault', '03-8901-2345');
+INSERT INTO Supplier VALUES ('SP15', 'Honda', '03-7788-9900');
+INSERT INTO Supplier VALUES ('SP16', 'Toyota', '03-8899-0011');
+INSERT INTO Supplier VALUES ('SP17', 'Peugeot', '03-5566-7788');
+INSERT INTO Supplier VALUES ('SP18', 'Jaguar', '03-9012-3456');
+INSERT INTO Supplier VALUES ('SP19', 'Lexus', '03-5678-5566');
+INSERT INTO Supplier VALUES ('SP20', 'Volkswagen', '03-6789-6677');
+
+INSERT INTO Customer VALUES('CU001', 'John', 'Doe', 28, 'john.doe@gmail.com', '0133456789', '1, Jalan Ikan, Seksyen 20, 40300 Shah Alam, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU002', 'Joshua', 'Smith', 32, 'jane.smith@yahoo.com', '0144567890', '14, Jalan SS 2/3, SS 2, 47300 Petaling Jaya, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU003', 'Alice', 'Johnson', 25, 'alice.johnson@hotmail.com', '0155678901', '23, Jalan PJU 8/1, Damansara Perdana, 47820 Petaling Jaya, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU004', 'Robert', 'Brown', 40, 'robert.brown@gmail.com', '0166789012', '46, Jalan Melati 3, Bandar Bukit Beruntung, 48300 Rawang, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU005', 'Emily', 'Davis', 30, 'emily.davis@gmail.com', '0177890123', '27, Jalan Batu Caves, Batu Caves, 68100 Gombak, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU006', 'Michael', 'Miller', 35, 'michael.miller@yahoo.com', '0188901234', '13, Jalan Kasturi, 4, Jalan Kuning, Seksyen 12, 40100 Puchong, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU007', 'Alice', 'Wilson', 27, 'jessica.wilson@hotmail.com', '0199012345', '29, Jalan Puchong Jaya Selatan 2, Puchong Jaya, 47100 Puchong, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU008', 'David', 'Moore', 29, 'david.moore@gmail.com', '0110123456', '6, Jalan Melati 3, Bandar Bukit Beruntung, 48300 Rawang, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU009', 'Sarah', 'Taylor', 31, 'sarah.taylor@yahoo.com', '0121234567', '27, Jalan SS 22/23, Damansara Jaya, 47400 Petaling Jaya, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU010', 'Daniel', 'Anderson', 33, 'daniel.anderson@hotmail.com', '0132345678', '31, Jalan Meranti Jaya 1, Taman Meranti Jaya, 47120 Puchong, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU011', 'Laura', 'Brown', 26, 'laura.thomas@gmail.com', '0143456789', '11, Jalan Melor, Seksyen 15, 40100 Shah Alam, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU012', 'James', 'Jackson', 34, 'james.jackson@yahoo.com', '0154567890', '5, Jalan Putra Perdana 5/1, Taman Putra Perdana, 47130 Puchong, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU013', 'Emma', 'Smith', 28, 'emma.white@hotmail.com', '0165678901', '24, Jalan SP 5/4, Taman Subang Permai, 47610 Subang Jaya, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU014', 'Matthew', 'Harris', 29, 'matthew.harris@gmail.com', '0176789012', '21, Jalan BK 5a/2, Bandar Kinrara, 47180 Puchong, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU015', 'Olivia', 'Clark', 32, 'olivia.martin@yahoo.com', '0187890123', '26, Jalan USJ 9/5p, Subang Business Centre, 47620 Subang Jaya, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU016', 'Joshua', 'Garcia', 37, 'joshua.garcia@hotmail.com', '0198901234', '5, Jalan Tasik Prima 5/2, Taman Tasik Prima, 47150 Puchong, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU017', 'Sophia', 'Martinez', 24, 'sophia.martinez@gmail.com', '0119012345', '16, Jalan Durian, Seksyen 21, 40300 Shah Alam, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU018', 'Christopher', 'Robinson', 28, 'christopher.robinson@yahoo.com', '0120123456', '18, Jalan Belimbing, Seksyen 22, 40400 Shah Alam, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU019', 'Isabella', 'Clark', 31, 'isabella.clark@hotmail.com', '0131234567', '10, Jalan Prima Tropika 2, Taman Prima Tropika, 43300 Seri Kembangan, Selangor, Malaysia');
+INSERT INTO Customer VALUES('CU020', 'Andrew', 'Rodriguez', 35, 'andrew.rodriguez@gmail.com', '0142345678', '14, Jalan USJ 1/1, USJ 1, 47620 Subang Jaya, Selangor, Malaysia');
+
+INSERT INTO Stock VALUES('S01', 'C01', 'BR001', 10, 'SP01');
+INSERT INTO Stock VALUES('S02', 'C01', 'BR002', 5, 'SP01');
+INSERT INTO Stock VALUES('S03', 'C01', 'BR005', 8, 'SP01');
+INSERT INTO Stock VALUES('S04', 'C01', 'BR004', 12, 'SP01');
+INSERT INTO Stock VALUES('S05', 'C01', 'BR003', 7, 'SP01');
+INSERT INTO Stock VALUES('S06', 'C04', 'BR001', 6, 'SP04');
+INSERT INTO Stock VALUES('S07', 'C04', 'BR002', 9, 'SP04');
+INSERT INTO Stock VALUES('S08', 'C05', 'BR001', 11, 'SP04');
+INSERT INTO Stock VALUES('S09', 'C04', 'BR004', 4, 'SP04');
+INSERT INTO Stock VALUES('S10', 'C02', 'BR004', 10, 'SP01');
+INSERT INTO Stock VALUES('S11', 'C06', 'BR005', 8, 'SP06');
+INSERT INTO Stock VALUES('S12', 'C06', 'BR003', 5, 'SP06');
+INSERT INTO Stock VALUES('S13', 'C17', 'BR001', 9, 'SP02');
+INSERT INTO Stock VALUES('S14', 'C07', 'BR004', 7, 'SP06');
+INSERT INTO Stock VALUES('S15', 'C09', 'BR005', 6, 'SP08');
+INSERT INTO Stock VALUES('S16', 'C08', 'BR004', 15, 'SP08');
+INSERT INTO Stock VALUES('S17', 'C10', 'BR003', 10, 'SP10');
+INSERT INTO Stock VALUES('S18', 'C11', 'BR003', 12, 'SP10');
+INSERT INTO Stock VALUES('S19', 'C12', 'BR003', 9, 'SP05');
+INSERT INTO Stock VALUES('S20', 'C13', 'BR003', 11, 'SP05');
+INSERT INTO Stock VALUES('S21', 'C14', 'BR005', 14, 'SP07');
+INSERT INTO Stock VALUES('S22', 'C16', 'BR002', 13, 'SP02');
+INSERT INTO Stock VALUES('S23', 'C16', 'BR005', 7, 'SP02');
+INSERT INTO Stock VALUES('S24', 'C18', 'BR003', 8, 'SP19');
+INSERT INTO Stock VALUES('S25', 'C22', 'BR005', 10, 'SP19');
+INSERT INTO Stock VALUES('S26', 'C20', 'BR003', 12, 'SP20');
+INSERT INTO Stock VALUES('S27', 'C24', 'BR001', 10, 'SP11');
+INSERT INTO Stock VALUES('S28', 'C25', 'BR003', 14, 'SP11');
+INSERT INTO Stock VALUES('S29', 'C32', 'BR002', 9, 'SP15');
+INSERT INTO Stock VALUES('S30', 'C27', 'BR004', 5, 'SP12');
+INSERT INTO Stock VALUES('S31', 'C27', 'BR005', 11, 'SP12');
+INSERT INTO Stock VALUES('S32', 'C38', 'BR001', 13, 'SP18');
+INSERT INTO Stock VALUES('S33', 'C29', 'BR003', 15, 'SP13');
+INSERT INTO Stock VALUES('S34', 'C36', 'BR002', 10, 'SP17');
+INSERT INTO Stock VALUES('S35', 'C39', 'BR004', 12, 'SP03');
+INSERT INTO Stock VALUES('S36', 'C30', 'BR005', 10, 'SP14');
+INSERT INTO Stock VALUES('S37', 'C32', 'BR001', 8, 'SP15');
+INSERT INTO Stock VALUES('S38', 'C25', 'BR005', 7, 'SP11');
+INSERT INTO Stock VALUES('S39', 'C38', 'BR003', 5, 'SP18' );
+INSERT INTO Stock VALUES('S40', 'C22', 'BR002', 7, 'SP09');
+INSERT INTO Stock VALUES('S41', 'C10', 'BR004', 9, 'SP10');
+INSERT INTO Stock VALUES('S42', 'C09',  'BR005', 11, 'SP08');
+INSERT INTO Stock VALUES('S43', 'C18', 'BR002', 13, 'SP19');
+INSERT INTO Stock VALUES('S44', 'C34', 'BR002', 15, 'SP16');
+INSERT INTO Stock VALUES('S45', 'C34', 'BR001', 15, 'SP16'); 
+INSERT INTO Stock VALUES('S46', 'C02', 'BR003', 15, 'SP16');
+INSERT INTO Stock VALUES('S47', 'C18', 'BR005', 15, 'SP16');
+INSERT INTO Stock VALUES('S48', 'C18', 'BR003', 15, 'SP16');
+
+
+
+INSERT INTO ServiceMaintenance VALUES ('SM01', 'CU001', 'E11', 'C01', TO_DATE('05-07-2024', 'DD-MM-YYYY'), TO_DATE('07-07-2024', 'DD-MM-YYYY'), 'Oil Change', 200, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM01', 'CU001', 'E12', 'C01', TO_DATE('05-07-2024', 'DD-MM-YYYY'), TO_DATE('07-07-2024', 'DD-MM-YYYY'), 'Tire Rotation', 200, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM01', 'CU001', 'E13', 'C01', TO_DATE('05-07-2024', 'DD-MM-YYYY'), TO_DATE('07-07-2024', 'DD-MM-YYYY'), 'Transmission Check', 200, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM02', 'CU002', 'E50', 'C02', TO_DATE('10-07-2024', 'DD-MM-YYYY'), TO_DATE('12-07-2024', 'DD-MM-YYYY'), 'Oil Change', 150, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM02', 'CU002', 'E65', 'C02', TO_DATE('10-07-2024', 'DD-MM-YYYY'), TO_DATE('12-07-2024', 'DD-MM-YYYY'), 'Tire Rotation', 150, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM03', 'CU005', 'E83', 'C01', TO_DATE('25-07-2024', 'DD-MM-YYYY'), NULL, 'Electrical System Check', 600, 'In Progress');
+INSERT INTO ServiceMaintenance VALUES ('SM03', 'CU005', 'E84', 'C01', TO_DATE('25-07-2024', 'DD-MM-YYYY'), NULL, 'Transmission Check', 600, 'In Progress');
+
+INSERT INTO ServiceMaintenance VALUES ('SM03', 'CU005', 'E11', 'C03', TO_DATE('07-08-2024', 'DD-MM-YYYY'), NULL, 'Engine Tune-up', 250, 'In Progress');
+
+INSERT INTO ServiceMaintenance VALUES ('SM04', 'CU005', 'E67', 'C01', TO_DATE('01-08-2024', 'DD-MM-YYYY'), TO_DATE('03-08-2024', 'DD-MM-YYYY'), 'Cooling System Service', 500, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM04', 'CU005', 'E68', 'C01', TO_DATE('01-08-2024', 'DD-MM-YYYY'), TO_DATE('03-08-2024', 'DD-MM-YYYY'), 'Air Filter Replacement', 500, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM04', 'CU005', 'E49', 'C01', TO_DATE('01-08-2024', 'DD-MM-YYYY'), TO_DATE('03-08-2024', 'DD-MM-YYYY'), 'Engine Tune-up', 500, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM05', 'CU006', 'E47', 'C06', TO_DATE('05-08-2024', 'DD-MM-YYYY'), NULL, 'Exhaust Repair', 350, 'In Progress');
+
+INSERT INTO ServiceMaintenance VALUES ('SM06', 'CU007', 'E31', 'C07', TO_DATE('10-08-2024', 'DD-MM-YYYY'), TO_DATE('12-08-2024', 'DD-MM-YYYY'), 'Cooling System Service', 450, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM06', 'CU007', 'E32', 'C07', TO_DATE('10-08-2024', 'DD-MM-YYYY'), TO_DATE('12-08-2024', 'DD-MM-YYYY'), 'Air Filter Replacement', 450, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM07', 'CU001', 'E49', 'C12', TO_DATE('10-08-2024', 'DD-MM-YYYY'), TO_DATE('12-08-2024', 'DD-MM-YYYY'), 'Cooling System Service', 450, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM07', 'CU007', 'E86', 'C07', TO_DATE('20-08-2024', 'DD-MM-YYYY'), TO_DATE('22-08-2024', 'DD-MM-YYYY'), 'Air Filter Replacement', 100, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM07', 'CU007', 'E85', 'C07', TO_DATE('20-08-2024', 'DD-MM-YYYY'), TO_DATE('22-08-2024', 'DD-MM-YYYY'), 'Brake Inspection', 100, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM08', 'CU001', 'E66', 'C01', TO_DATE('15-08-2024', 'DD-MM-YYYY'), TO_DATE('17-08-2024', 'DD-MM-YYYY'), 'Brake Inspection', 300, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM08', 'CU001', 'E67', 'C01', TO_DATE('15-08-2024', 'DD-MM-YYYY'), TO_DATE('17-08-2024', 'DD-MM-YYYY'), 'Fuel System Cleaning', 300, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM08', 'CU001', 'E68', 'C01', TO_DATE('15-08-2024', 'DD-MM-YYYY'), TO_DATE('17-08-2024', 'DD-MM-YYYY'), 'Fluid Check', 300, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM010', 'CU001', 'E12', 'C12', TO_DATE('30-08-2024', 'DD-MM-YYYY'), NULL, 'Fuel System Cleaning', 250, 'In Progress');
+INSERT INTO ServiceMaintenance VALUES ('SM010', 'CU001', 'E13', 'C12', TO_DATE('30-08-2024', 'DD-MM-YYYY'), NULL, 'Suspension Repair', 250, 'In Progress');
+
+INSERT INTO ServiceMaintenance VALUES ('SM011', 'CU001', 'E29', 'C01', TO_DATE('01-09-2024', 'DD-MM-YYYY'), TO_DATE('03-09-2024', 'DD-MM-YYYY'), 'Fluid Check', 150, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM011', 'CU001', 'E30', 'C01', TO_DATE('01-09-2024', 'DD-MM-YYYY'), TO_DATE('03-09-2024', 'DD-MM-YYYY'), 'Differential Service', 150, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM12', 'CU004', 'E48', 'C02', TO_DATE('05-09-2024', 'DD-MM-YYYY'), NULL, 'Air Filter Replacement', 300, 'In Progress');
+INSERT INTO ServiceMaintenance VALUES ('SM12', 'CU004', 'E49', 'C02', TO_DATE('05-09-2024', 'DD-MM-YYYY'), NULL, 'Brake Pad Replacement', 300, 'In Progress');
+
+INSERT INTO ServiceMaintenance VALUES ('SM13', 'CU001', 'E14', 'C01', TO_DATE('05-09-2024', 'DD-MM-YYYY'), NULL, 'Suspension Repair', 700, 'In Progress');
+
+INSERT INTO ServiceMaintenance VALUES ('SM14', 'CU005', 'E66', 'C01', TO_DATE('10-09-2024', 'DD-MM-YYYY'), TO_DATE('12-09-2024', 'DD-MM-YYYY'), 'Differential Service', 700, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM14', 'CU005', 'E67', 'C01', TO_DATE('10-09-2024', 'DD-MM-YYYY'), TO_DATE('12-09-2024', 'DD-MM-YYYY'), 'Detailing Service', 700, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM14', 'CU005', 'E68', 'C01', TO_DATE('10-09-2024', 'DD-MM-YYYY'), TO_DATE('12-09-2024', 'DD-MM-YYYY'), 'Battery Replacement', 700, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM15', 'CU006', 'E30', 'C06', TO_DATE('10-09-2024', 'DD-MM-YYYY'), TO_DATE('12-09-2024', 'DD-MM-YYYY'), 'Timing Belt Replacement', 800, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM15', 'CU006', 'E31', 'C06', TO_DATE('10-09-2024', 'DD-MM-YYYY'), TO_DATE('12-09-2024', 'DD-MM-YYYY'), 'Brake Pad Replacement', 800, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM12', 'CU006', 'E32', 'C06', TO_DATE('10-09-2024', 'DD-MM-YYYY'), TO_DATE('12-09-2024', 'DD-MM-YYYY'), 'Timing Belt Replacement', 800, 'Completed');
+
+INSERT INTO ServiceMaintenance VALUES ('SM13', 'CU010', 'E29', 'C10', TO_DATE('15-09-2024', 'DD-MM-YYYY'), TO_DATE('17-09-2024', 'DD-MM-YYYY'), 'Detailing Service', 150, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM14', 'CU001', 'E86', 'C01', TO_DATE('20-09-2024', 'DD-MM-YYYY'), TO_DATE('22-09-2024', 'DD-MM-YYYY'), 'Battery Replacement', 400, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM16', 'CU018', 'E29', 'C18', TO_DATE('30-09-2024', 'DD-MM-YYYY'), TO_DATE('02-10-2024', 'DD-MM-YYYY'), 'Air Filter Replacement', 400, 'Completed');
+INSERT INTO ServiceMaintenance VALUES ('SM16', 'CU018', 'E30', 'C18', TO_DATE('30-09-2024', 'DD-MM-YYYY'), TO_DATE('02-10-2024', 'DD-MM-YYYY'), 'Wheel Bearing Replacement', 400, 'Completed');
+
+INSERT INTO Sale VALUES(1001, 'C05', 'CU001', 'E04', 1, TO_DATE('15-01-2024', 'DD-MM-YYYY'), '10:30', 2100000);
+INSERT INTO Sale VALUES(1002, 'C02', 'CU002', 'E47', 1, TO_DATE('20-02-2024', 'DD-MM-YYYY'), '14:45', 150000);
+INSERT INTO Sale VALUES(1003, 'C03', 'CU001', 'E42', 2, TO_DATE('10-03-2024', 'DD-MM-YYYY'), '09:15', 230000);  
+INSERT INTO Sale VALUES(1004, 'C02', 'CU004', 'E61', 1, TO_DATE('05-04-2024', 'DD-MM-YYYY'), '11:00', 1100000);
+INSERT INTO Sale VALUES(1005, 'C01', 'CU005', 'E23', 1, TO_DATE('18-05-2024', 'DD-MM-YYYY'), '16:30', 131000);
+INSERT INTO Sale VALUES(1006, 'C06', 'CU006', 'E76', 3, TO_DATE('12-06-2024', 'DD-MM-YYYY'), '13:00', 150000);
+INSERT INTO Sale VALUES(1007, 'C07', 'CU007', 'E58', 1, TO_DATE('22-05-2024', 'DD-MM-YYYY'), '15:30', 250000);
+INSERT INTO Sale VALUES(1008, 'C08', 'CU008', 'E61', 2, TO_DATE('09-02-2024', 'DD-MM-YYYY'), '10:00', 380000);
+INSERT INTO Sale VALUES(1009, 'C02', 'CU002', 'E60', 1, TO_DATE('15-01-2024', 'DD-MM-YYYY'), '17:15', 320000);  
+INSERT INTO Sale VALUES(1010, 'C10', 'CU010', 'E40', 1, TO_DATE('11-05-2024', 'DD-MM-YYYY'), '19:00', 850000);
+INSERT INTO Sale VALUES(1011, 'C11', 'CU011', 'E41', 1, TO_DATE('07-02-2024', 'DD-MM-YYYY'), '11:45', 1200000);
+INSERT INTO Sale VALUES(1012, 'C12', 'CU003', 'E41', 1, TO_DATE('01-03-2024', 'DD-MM-YYYY'), '14:00', 202500);  
+INSERT INTO Sale VALUES(1013, 'C13', 'CU013', 'E41', 2, TO_DATE('24-03-2024', 'DD-MM-YYYY'), '09:30', 324000);
+INSERT INTO Sale VALUES(1014, 'C14', 'CU014', 'E77', 1, TO_DATE('18-02-2024', 'DD-MM-YYYY'), '10:45', 414000);
+INSERT INTO Sale VALUES(1015, 'C14', 'CU015', 'E78', 1, TO_DATE('26-01-2024', 'DD-MM-YYYY'), '13:15', 495000);
+INSERT INTO Sale VALUES(1016, 'C16', 'CU016', 'E79', 1, TO_DATE('30-04-2024', 'DD-MM-YYYY'), '16:00', 270000);
+INSERT INTO Sale VALUES(1017, 'C18', 'CU017', 'E41', 1, TO_DATE('15-05-2024', 'DD-MM-YYYY'), '11:30', 297000);
+INSERT INTO Sale VALUES(1018, 'C18', 'CU018', 'E24', 1, TO_DATE('28-06-2024', 'DD-MM-YYYY'), '15:45', 270000);
+INSERT INTO Sale VALUES(1019, 'C18', 'CU019', 'E77', 1, TO_DATE('19-04-2024', 'DD-MM-YYYY'), '09:00', 247500);
+INSERT INTO Sale VALUES(1020, 'C20', 'CU012', 'E40', 1, TO_DATE('21-01-2024', 'DD-MM-YYYY'), '12:30', 450000);
+INSERT INTO Sale VALUES(1021, 'C20', 'CU009', 'E40', 1, TO_DATE('21-01-2024', 'DD-MM-YYYY'), '13:30', 450000);
+INSERT INTO Sale VALUES(1022, 'C20', 'CU020', 'E40', 1, TO_DATE('21-01-2024', 'DD-MM-YYYY'), '14:30', 450000);
+
+
