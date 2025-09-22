@@ -46,6 +46,7 @@ Key features of the database include:
 | `sample_data.sql`         | (Optional) Sample data for testing queries |
 | `business_queries.sql`    | Collection of real-world business queries with comments |
 | `screenshots/`            | (Optional) Screenshots of query outputs |
+| `outputs/`                | (Optional) CSV or text files showing query results |
 
 ---
 
@@ -65,6 +66,38 @@ Each query is preceded by comments explaining the **business goal** and the **lo
 
 ## 🖼️ ER Diagram
 
-![Entity Relationship Diagram](ERD.png)
+![Entity Relationship Diagram](erd.png)
 
 ---
+
+## 📸 Query Output Examples
+
+You can find screenshots of selected query results in the [`/screenshots`](screenshots) folder.  
+Below are some embedded examples:
+
+### Tesla Promotion Query Result  
+![Tesla Promotion Query Result](screenshots/tesla-promotion-result.png)
+
+---
+
+### Luxury German Cars by Branch Result  
+![Luxury German Cars Result](screenshots/luxury-sales-result.png)
+
+---
+
+### 3️⃣ Manager Salary Raise – Employee “Sam” and Their Manager  
+
+![Manager Salary Raise](screenshots/manager-salary-raise.png)
+
+---
+
+### 4️⃣ Cars in Stock Never Sold  
+
+![Cars in Stock Never Sold](screenshots/cars-never-sold.png)
+
+---
+
+### 5️⃣ Cars <1 Year Old with Highest Service Count  
+
+![Cars <1 Year Old Highest Service](screenshots/most-serviced.png)
+
