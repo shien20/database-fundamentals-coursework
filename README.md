@@ -65,6 +65,6 @@ Each query is preceded by comments explaining the **business goal** and the **lo
 
 ## 🖼️ ER Diagram
 
-![Entity Relationship Diagram](erd.png)
+![Entity Relationship Diagram](ERD.png)
 
 ---
