@@ -1,0 +1,77 @@
+/* =========================================================
+   1. Tesla Promotion – Retrieve customers who purchased Tesla cars in first half of 2024
+   Business Goal:
+   Identify customers eligible for a limited-edition umbrella
+   ========================================================= */
+SELECT FirstName, LastName, Email, PhoneNumber, Address
+FROM Customer
+WHERE CustomerID IN (
+    SELECT CustomerID
+    FROM Sale
+    WHERE (MONTHS_BETWEEN('1-JAN-2024', DatePurchased)) <= 6
+      AND CarID IN (
+          SELECT CarID
+          FROM Car
+          WHERE Brand = 'Tesla'
+      )
+);
+
+------------------------------------------------------------
+/* 2. Luxury German Cars by Branch
+   Business Goal:
+   HR wants to evaluate sales of luxury German cars by branch for non-managerial staff
+------------------------------------------------------------ */
+SELECT db.BranchID,
+       db.Location,
+       COUNT(*) AS "Total Number of Cars Sold By Each Branch"
+FROM Employee e
+JOIN Job j ON e.JobID = j.JobID
+JOIN Sale s ON e.EmployeeID = s.EmployeeID
+JOIN Car c ON s.CarID = c.CarID
+JOIN DealerBranch db ON e.BranchID = db.BranchID
+WHERE j.JobPosition IN ('Sales Associate', 'Senior Salesperson', 'Junior Salesperson')
+  AND c.Brand IN ('Porsche', 'Mercedes-Benz', 'BMW', 'Audi')
+GROUP BY db.BranchID, db.Location
+HAVING COUNT(*) >= 1;
+
+------------------------------------------------------------
+/* 3. Manager Salary Raise
+   Business Goal:
+   Identify employee whose first name contains “Sam” and retrieve their manager’s details
+------------------------------------------------------------ */
+SELECT m.EmployeeID AS "ManagerID",
+       m.EmployeeFirstName || ' ' || m.EmployeeLastName AS "Manager Name",
+       e.EmployeeFirstName || ' ' || e.EmployeeLastName AS "Employee Name",
+       m.Salary AS "Manager Salary"
+FROM Employee e
+JOIN Employee m ON e.EmployeeManagerID = m.EmployeeID
+WHERE e.EmployeeFirstName LIKE '%Sam%' AND m.Salary < 8000;
+
+------------------------------------------------------------
+/* 4. Cars in Stock Never Sold
+   Business Goal:
+   Finance needs to identify cars in stock that have never been sold
+------------------------------------------------------------ */
+SELECT st.CarID, c.Brand, c.CarModel
+FROM Stock st
+JOIN Car c ON c.CarID = st.CarID
+MINUS
+SELECT s.CarID, c.Brand, c.CarModel
+FROM Sale s
+JOIN Car c ON c.CarID = s.CarID;
+
+------------------------------------------------------------
+/* 5. Cars <1 Year Old with Highest Service Count
+   Business Goal:
+   Identify cars less than 1 year old with the highest number of services
+------------------------------------------------------------ */
+SELECT c.CarID,
+       c.Brand,
+       c.CarModel,
+       COUNT(sm.CarID) AS "Total Number of Times Serviced"
+FROM Car c
+JOIN ServiceMaintenance sm ON c.CarID = sm.CarID
+WHERE (TRUNC(MONTHS_BETWEEN(SYSDATE, c.ManufactureDate)/12) < 1)
+  AND EXTRACT(YEAR FROM sm.ServiceStart) = EXTRACT(YEAR FROM SYSDATE)
+GROUP BY c.CarID, c.Brand, c.CarModel
+ORDER BY COUNT(sm.CarID) DESC;
