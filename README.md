@@ -79,19 +79,19 @@ Below are some embedded examples:
 
 ---
 
-### 3️⃣ Manager Salary Raise – Employee “Sam” and Their Manager  
+### Manager Salary Raise – Employee “Sam” and Their Manager  
 
 ![Manager Salary Raise](screenshots/manager-salary-raise.png)
 
 ---
 
-### 4️⃣ Cars in Stock Never Sold  
+### Cars in Stock Never Sold  
 
 ![Cars in Stock Never Sold](screenshots/cars-never-sold.png)
 
 ---
 
-### 5️⃣ Cars <1 Year Old with Highest Service Count  
+### Cars <1 Year Old with Highest Service Count  
 
 ![Cars <1 Year Old Highest Service](screenshots/most-serviced.png)
 
