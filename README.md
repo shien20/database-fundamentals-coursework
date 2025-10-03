@@ -76,10 +76,6 @@ Below are some embedded examples:
 ### Tesla Promotion Query Result  
 ![Tesla Promotion Query Result](screenshots/tesla-promotion.png)
 
----
-
-### Luxury German Cars by Branch Result  
-![Luxury German Cars Result](screenshots/luxury-sales-result.png)
 
 ---
 
